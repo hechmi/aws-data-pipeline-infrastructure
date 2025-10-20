@@ -42,9 +42,11 @@ class PipelineStack(Stack):
                     build_image=codebuild.LinuxBuildImage.STANDARD_7_0
                 )
             ),
-            code_build_defaults=codebuild.BuildEnvironment(
-                build_image=codebuild.LinuxBuildImage.STANDARD_7_0
-            )
+            code_build_defaults={
+                "build_environment": codebuild.BuildEnvironment(
+                    build_image=codebuild.LinuxBuildImage.STANDARD_7_0
+                )
+            }
         )
  
         # Add development stage
