@@ -6,7 +6,7 @@ from aws_cdk import (
     aws_codebuild as codebuild
 )
 from constructs import Construct
-from aws_cdk.pipelines import CodePipeline, CodePipelineSource, CodeBuildStep
+from aws_cdk.pipelines import CodePipeline, CodePipelineSource, CodeBuildStep, ManualApprovalStep
 from aws_glue_cdk_baseline.glue_app_stage import GlueAppStage
  
 GITHUB_REPO = "hechmi/aws-glue-cdk-baseline"
@@ -41,6 +41,9 @@ class PipelineStack(Stack):
                 build_environment=codebuild.BuildEnvironment(
                     build_image=codebuild.LinuxBuildImage.STANDARD_7_0
                 )
+            ),
+            code_build_defaults=codebuild.BuildEnvironment(
+                build_image=codebuild.LinuxBuildImage.STANDARD_7_0
             )
         )
  
@@ -52,13 +55,14 @@ class PipelineStack(Stack):
             ))
         pipeline.add_stage(dev_stage)
 
-        # Add production stage
+        # Add production stage with manual approval
         prod_stage = GlueAppStage(self, "ProdStage", config=config, stage="prod", 
             env=cdk.Environment(
                 account=str(config['prodAccount']['awsAccountId']),
                 region=config['prodAccount']['awsRegion']
             ))
-        pipeline.add_stage(prod_stage)
+        pipeline.add_stage(prod_stage, 
+            pre=[ManualApprovalStep("ApproveProduction")])
  
         # Glue Resource Sync as a separate step in the pipeline
         pipeline.add_wave("GlueJobSync").add_post(CodeBuildStep("GlueJobSync",
