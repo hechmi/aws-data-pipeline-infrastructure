@@ -1,5 +1,6 @@
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
+# Test change to verify automatic pipeline triggering
 from typing import Dict
 from os import path
 from aws_cdk import (
