@@ -57,7 +57,39 @@ class PipelineStack(Stack):
                 account=str(config['devAccount']['awsAccountId']),
                 region=config['devAccount']['awsRegion']
             ))
-        pipeline.add_stage(dev_stage)
+        
+        # Add validation step after dev deployment
+        dev_validation = CodeBuildStep("ValidateDevInfra",
+            install_commands=[
+                "pip install boto3"
+            ],
+            commands=[
+                "echo 'Validating Dev Infrastructure...'",
+                "chmod +x scripts/validate_infrastructure.py",
+                f"python3 scripts/validate_infrastructure.py dev {config['devAccount']['awsRegion']} {config['devAccount']['awsAccountId']}"
+            ],
+            build_environment=codebuild.BuildEnvironment(
+                build_image=codebuild.LinuxBuildImage.STANDARD_7_0
+            ),
+            role_policy_statements=[
+                iam.PolicyStatement(
+                    actions=[
+                        "s3:GetObject",
+                        "s3:PutObject",
+                        "s3:DeleteObject",
+                        "s3:ListBucket",
+                        "s3:HeadBucket",
+                        "cloudformation:ListExports",
+                        "glue:GetDatabase",
+                        "logs:DescribeLogStreams",
+                        "logs:GetLogEvents"
+                    ],
+                    resources=["*"]
+                )
+            ]
+        )
+        
+        pipeline.add_stage(dev_stage, post=[dev_validation])
 
         # Add production stage with manual approval
         prod_stage = DeploymentStage(self, "ProdStage", config=config, stage="prod", 
@@ -65,5 +97,38 @@ class PipelineStack(Stack):
                 account=str(config['prodAccount']['awsAccountId']),
                 region=config['prodAccount']['awsRegion']
             ))
+        
+        # Add validation step after prod deployment
+        prod_validation = CodeBuildStep("ValidateProdInfra",
+            install_commands=[
+                "pip install boto3"
+            ],
+            commands=[
+                "echo 'Validating Prod Infrastructure...'",
+                "chmod +x scripts/validate_infrastructure.py",
+                f"python3 scripts/validate_infrastructure.py prod {config['prodAccount']['awsRegion']} {config['prodAccount']['awsAccountId']}"
+            ],
+            build_environment=codebuild.BuildEnvironment(
+                build_image=codebuild.LinuxBuildImage.STANDARD_7_0
+            ),
+            role_policy_statements=[
+                iam.PolicyStatement(
+                    actions=[
+                        "s3:GetObject",
+                        "s3:PutObject",
+                        "s3:DeleteObject",
+                        "s3:ListBucket",
+                        "s3:HeadBucket",
+                        "cloudformation:ListExports",
+                        "glue:GetDatabase",
+                        "logs:DescribeLogStreams",
+                        "logs:GetLogEvents"
+                    ],
+                    resources=["*"]
+                )
+            ]
+        )
+        
         pipeline.add_stage(prod_stage, 
-            pre=[ManualApprovalStep("ApproveProduction")])
+            pre=[ManualApprovalStep("ApproveProduction")],
+            post=[prod_validation])
