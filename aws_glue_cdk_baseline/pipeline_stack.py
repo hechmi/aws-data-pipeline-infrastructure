@@ -9,9 +9,9 @@ from constructs import Construct
 from aws_cdk.pipelines import CodePipeline, CodePipelineSource, CodeBuildStep, ManualApprovalStep
 from aws_glue_cdk_baseline.deployment_stage import DeploymentStage
  
-GITHUB_REPO = "hechmi/aws-data-pipeline-demo"
+GITHUB_REPO = "hechmi/aws-data-pipeline-infrastructure"
 GITHUB_BRANCH = "main"
-GITHUB_CONNECTION_ARN = "arn:aws:codeconnections:us-west-2:009507777973:connection/90fd0625-631e-4825-b218-c4e3b5b1f879"
+GITHUB_CONNECTION_ARN = "arn:aws:codeconnections:us-west-2:009507777973:connection/e2814821-01cb-4c90-8ba5-3df3093c31c0"
 
 # Test automatic triggering
  
@@ -67,32 +67,3 @@ class PipelineStack(Stack):
             ))
         pipeline.add_stage(prod_stage, 
             pre=[ManualApprovalStep("ApproveProduction")])
- 
-        # Glue Resource Sync as a separate step in the pipeline
-        pipeline.add_wave("GlueJobSync").add_post(CodeBuildStep("GlueJobSync",
-            input=source,
-            commands=[
-                "python $(pwd)/aws_glue_cdk_baseline/job_scripts/generate_mapping.py",
-                "python aws_glue_cdk_baseline/job_scripts/sync.py "
-                   "--dst-role-arn arn:aws:iam::{0}:role/GlueCrossAccountRole-prod "
-                   "--dst-region {1} "
-                   "--deserialize-from-file aws_glue_cdk_baseline/resources/resources.json "
-                   "--config-path mapping.json "
-                   "--targets job,catalog "
-                   "--skip-prompt".format(
-                       config['prodAccount']['awsAccountId'],
-                       config['prodAccount']['awsRegion']
-                   ),
-            ],
-            role_policy_statements=[
-                iam.PolicyStatement(
-                    actions=[
-                        "sts:AssumeRole",
-                    ],
-                    resources=["*"]
-                )
-            ],
-            build_environment=codebuild.BuildEnvironment(
-                build_image=codebuild.LinuxBuildImage.STANDARD_7_0
-            )
-        ))
