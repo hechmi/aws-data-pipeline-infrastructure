@@ -9,9 +9,11 @@ from constructs import Construct
 from aws_cdk.pipelines import CodePipeline, CodePipelineSource, CodeBuildStep, ManualApprovalStep
 from aws_glue_cdk_baseline.glue_app_stage import GlueAppStage
  
-GITHUB_REPO = "hechmi/aws-glue-cdk-baseline"
+GITHUB_REPO = "hechmi/aws-data-pipeline-demo"
 GITHUB_BRANCH = "main"
-GITHUB_CONNECTION_ARN = "arn:aws:codeconnections:us-east-1:009507777973:connection/d768c13d-4e9f-499a-be0a-52644fa2ad44"
+GITHUB_CONNECTION_ARN = "arn:aws:codeconnections:us-west-2:009507777973:connection/90fd0625-631e-4825-b218-c4e3b5b1f879"
+
+# Test automatic triggering
  
 class PipelineStack(Stack):
  
