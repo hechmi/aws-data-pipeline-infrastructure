@@ -7,7 +7,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 from aws_cdk.pipelines import CodePipeline, CodePipelineSource, CodeBuildStep, ManualApprovalStep
-from aws_glue_cdk_baseline.glue_app_stage import GlueAppStage
+from aws_glue_cdk_baseline.deployment_stage import DeploymentStage
  
 GITHUB_REPO = "hechmi/aws-data-pipeline-demo"
 GITHUB_BRANCH = "main"
@@ -27,7 +27,7 @@ class PipelineStack(Stack):
         )
  
         pipeline = CodePipeline(self, "GluePipeline",
-            pipeline_name="GluePipeline",
+            pipeline_name="GlueInfraPipeline",
             cross_account_keys=True,
             docker_enabled_for_synth=True,
             synth=CodeBuildStep("CdkSynth",
@@ -52,7 +52,7 @@ class PipelineStack(Stack):
         )
  
         # Add development stage
-        dev_stage = GlueAppStage(self, "DevStage", config=config, stage="dev", 
+        dev_stage = DeploymentStage(self, "DevStage", config=config, stage="dev", 
             env=cdk.Environment(
                 account=str(config['devAccount']['awsAccountId']),
                 region=config['devAccount']['awsRegion']
@@ -60,7 +60,7 @@ class PipelineStack(Stack):
         pipeline.add_stage(dev_stage)
 
         # Add production stage with manual approval
-        prod_stage = GlueAppStage(self, "ProdStage", config=config, stage="prod", 
+        prod_stage = DeploymentStage(self, "ProdStage", config=config, stage="prod", 
             env=cdk.Environment(
                 account=str(config['prodAccount']['awsAccountId']),
                 region=config['prodAccount']['awsRegion']

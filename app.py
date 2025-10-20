@@ -25,7 +25,7 @@ with open(configFilePath, 'r', encoding="utf-8") as f:
 
 PipelineStack(
     app, 
-    "PipelineStack",
+    "InfraPipelineStack",
     config=config,
     env=cdk.Environment(
         account=str(config["pipelineAccount"]["awsAccountId"]), 
