@@ -12,5 +12,5 @@ class DeploymentStage(cdk.Stage):
         self.infrastructure_stack = InfrastructureStack(self, "Infrastructure", config, stage)
 
     @property
-    def iam_role_arn(self):
-        return self.infrastructure_stack.iam_role_arn
+    def glue_service_role_arn(self):
+        return self.infrastructure_stack.glue_service_role_arn

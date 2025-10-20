@@ -14,33 +14,18 @@ class InfrastructureStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, config:Dict, stage:str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Create cross-account role
+        # Cross-account role for pipeline access
         self.cross_account_role = self.create_cross_account_role(
             f"GlueCrossAccountRole-{stage}",
             str(config['pipelineAccount']['awsAccountId'])
         )
 
-        # For integration test
-        self.iam_role = iam.Role(self, "GlueTestRole",
-            role_name=f"glue-test-{stage}",
-            assumed_by=iam.ArnPrincipal(f"arn:aws:iam::{str(config['pipelineAccount']['awsAccountId'])}:root"),
-            inline_policies={
-                "GluePolicy": iam.PolicyDocument(
-                    statements=[
-                        iam.PolicyStatement(
-                            actions=[
-                                "glue:GetJobs",
-                                "glue:GetJobRun",
-                                "glue:GetTags",
-                                "glue:StartJobRun"
-                            ],
-                            resources=[
-                                "*"
-                            ]
-                        )
-                    ]
-                )
-            }
+        # Role for Glue service operations
+        self.glue_service_role = iam.Role(self, "GlueServiceRole",
+            assumed_by=iam.ServicePrincipal("glue.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSGlueServiceRole")
+            ]
         )
     def create_cross_account_role(self, role_name: str, trusted_account_id: str):
         return iam.Role(self, f"{role_name}CrossAccountRole",
@@ -49,8 +34,8 @@ class InfrastructureStack(Stack):
             managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name("AdministratorAccess")]
         )
     @property
-    def iam_role_arn(self):
-        return self.iam_role.role_arn
+    def glue_service_role_arn(self):
+        return self.glue_service_role.role_arn
     @property
     def cross_account_role_arn(self):
         return self.glue_app_stack.cross_account_role_arn
