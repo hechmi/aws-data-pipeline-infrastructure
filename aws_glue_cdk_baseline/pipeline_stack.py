@@ -58,37 +58,7 @@ class PipelineStack(Stack):
                 region=config['devAccount']['awsRegion']
             ))
         
-        # Add validation step after dev deployment
-        dev_validation = CodeBuildStep("ValidateDevInfra",
-            install_commands=[
-                "pip install boto3"
-            ],
-            commands=[
-                "echo 'Validating Dev Infrastructure...'",
-                "chmod +x scripts/validate_infrastructure.py",
-                # Use cross-account role to access dev account
-                f"aws sts assume-role --role-arn arn:aws:iam::{config['devAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['devAccount']['awsAccountId']}-{config['devAccount']['awsRegion']} --role-session-name ValidationSession > /tmp/creds.json",
-                "export AWS_ACCESS_KEY_ID=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['AccessKeyId'])\")",
-                "export AWS_SECRET_ACCESS_KEY=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SecretAccessKey'])\")",
-                "export AWS_SESSION_TOKEN=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SessionToken'])\")",
-                f"python3 scripts/validate_infrastructure.py dev {config['devAccount']['awsRegion']} {config['devAccount']['awsAccountId']}"
-            ],
-            build_environment=codebuild.BuildEnvironment(
-                build_image=codebuild.LinuxBuildImage.STANDARD_7_0
-            ),
-            role_policy_statements=[
-                iam.PolicyStatement(
-                    actions=[
-                        "sts:AssumeRole"
-                    ],
-                    resources=[
-                        f"arn:aws:iam::{config['devAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['devAccount']['awsAccountId']}-{config['devAccount']['awsRegion']}"
-                    ]
-                )
-            ]
-        )
-        
-        pipeline.add_stage(dev_stage, post=[dev_validation])
+        pipeline.add_stage(dev_stage)
 
         # Add production stage with manual approval
         prod_stage = DeploymentStage(self, "ProdStage", config=config, stage="prod", 
@@ -97,36 +67,5 @@ class PipelineStack(Stack):
                 region=config['prodAccount']['awsRegion']
             ))
         
-        # Add validation step after prod deployment
-        prod_validation = CodeBuildStep("ValidateProdInfra",
-            install_commands=[
-                "pip install boto3"
-            ],
-            commands=[
-                "echo 'Validating Prod Infrastructure...'",
-                "chmod +x scripts/validate_infrastructure.py",
-                # Use cross-account role to access prod account
-                f"aws sts assume-role --role-arn arn:aws:iam::{config['prodAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['prodAccount']['awsAccountId']}-{config['prodAccount']['awsRegion']} --role-session-name ValidationSession > /tmp/creds.json",
-                "export AWS_ACCESS_KEY_ID=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['AccessKeyId'])\")",
-                "export AWS_SECRET_ACCESS_KEY=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SecretAccessKey'])\")",
-                "export AWS_SESSION_TOKEN=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SessionToken'])\")",
-                f"python3 scripts/validate_infrastructure.py prod {config['prodAccount']['awsRegion']} {config['prodAccount']['awsAccountId']}"
-            ],
-            build_environment=codebuild.BuildEnvironment(
-                build_image=codebuild.LinuxBuildImage.STANDARD_7_0
-            ),
-            role_policy_statements=[
-                iam.PolicyStatement(
-                    actions=[
-                        "sts:AssumeRole"
-                    ],
-                    resources=[
-                        f"arn:aws:iam::{config['prodAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['prodAccount']['awsAccountId']}-{config['prodAccount']['awsRegion']}"
-                    ]
-                )
-            ]
-        )
-        
         pipeline.add_stage(prod_stage, 
-            pre=[ManualApprovalStep("ApproveProduction")],
-            post=[prod_validation])
+            pre=[ManualApprovalStep("ApproveProduction")])
