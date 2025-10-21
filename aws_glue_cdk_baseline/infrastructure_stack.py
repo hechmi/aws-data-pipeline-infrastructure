@@ -117,7 +117,7 @@ def handler(event, context):
         # Start Glue job to process the CSV file
         try:
             response = glue.start_job_run(
-                JobName=f'FileProcessor-{stage}',
+                JobName=f'FileProcessorV2-{stage}',
                 Arguments={{
                     '--input_path': f's3://{{bucket}}/{{key}}',
                     '--output_path': f's3://glue-output-{stage}-{config[f'{stage}Account']['awsAccountId']}/',
@@ -145,7 +145,7 @@ def handler(event, context):
                     "glue:GetJob"
                 ],
                 resources=[
-                    f"arn:aws:glue:{self.region}:{self.account}:job/FileProcessor-{stage}"
+                    f"arn:aws:glue:{self.region}:{self.account}:job/FileProcessorV2-{stage}"
                 ]
             )
         )
