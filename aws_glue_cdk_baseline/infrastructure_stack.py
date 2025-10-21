@@ -44,7 +44,7 @@ class InfrastructureStack(Stack):
 
         # Create ASSETS bucket (for Glue scripts)
         self.assets_bucket = s3.Bucket(self, f"AssetsBucket-{stage}",
-            bucket_name=f"glue-assets-{stage}-{config[f'{stage}Account']['awsAccountId']}",
+            bucket_name=f"glue-assets-v2-{stage}-{config[f'{stage}Account']['awsAccountId']}",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True
         )
