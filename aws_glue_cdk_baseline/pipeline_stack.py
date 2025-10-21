@@ -61,12 +61,16 @@ class PipelineStack(Stack):
         # Add validation step after dev deployment
         dev_validation = CodeBuildStep("ValidateDevInfra",
             install_commands=[
-                "pip install boto3"
+                "pip install boto3",
+                "pip install awscli"
             ],
             commands=[
                 "echo 'Validating Dev Infrastructure...'",
                 "chmod +x scripts/validate_infrastructure.py",
-                f"python3 scripts/validate_infrastructure.py dev {config['devAccount']['awsRegion']} {config['devAccount']['awsAccountId']}"
+                # Configure AWS CLI to assume cross-account role
+                f"aws configure set role_arn arn:aws:iam::{config['devAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['devAccount']['awsAccountId']}-{config['devAccount']['awsRegion']}",
+                "aws configure set credential_source EcsContainer",
+                f"AWS_PROFILE=default python3 scripts/validate_infrastructure.py dev {config['devAccount']['awsRegion']} {config['devAccount']['awsAccountId']}"
             ],
             build_environment=codebuild.BuildEnvironment(
                 build_image=codebuild.LinuxBuildImage.STANDARD_7_0
@@ -74,17 +78,11 @@ class PipelineStack(Stack):
             role_policy_statements=[
                 iam.PolicyStatement(
                     actions=[
-                        "s3:GetObject",
-                        "s3:PutObject",
-                        "s3:DeleteObject",
-                        "s3:ListBucket",
-                        "s3:HeadBucket",
-                        "cloudformation:ListExports",
-                        "glue:GetDatabase",
-                        "logs:DescribeLogStreams",
-                        "logs:GetLogEvents"
+                        "sts:AssumeRole"
                     ],
-                    resources=["*"]
+                    resources=[
+                        f"arn:aws:iam::{config['devAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['devAccount']['awsAccountId']}-{config['devAccount']['awsRegion']}"
+                    ]
                 )
             ]
         )
@@ -106,6 +104,10 @@ class PipelineStack(Stack):
             commands=[
                 "echo 'Validating Prod Infrastructure...'",
                 "chmod +x scripts/validate_infrastructure.py",
+                # Assume cross-account role for validation
+                f"export AWS_ROLE_ARN=arn:aws:iam::{config['prodAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['prodAccount']['awsAccountId']}-{config['prodAccount']['awsRegion']}",
+                "export AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE",
+                "export AWS_ROLE_SESSION_NAME=ValidationSession",
                 f"python3 scripts/validate_infrastructure.py prod {config['prodAccount']['awsRegion']} {config['prodAccount']['awsAccountId']}"
             ],
             build_environment=codebuild.BuildEnvironment(
@@ -114,17 +116,11 @@ class PipelineStack(Stack):
             role_policy_statements=[
                 iam.PolicyStatement(
                     actions=[
-                        "s3:GetObject",
-                        "s3:PutObject",
-                        "s3:DeleteObject",
-                        "s3:ListBucket",
-                        "s3:HeadBucket",
-                        "cloudformation:ListExports",
-                        "glue:GetDatabase",
-                        "logs:DescribeLogStreams",
-                        "logs:GetLogEvents"
+                        "sts:AssumeRole"
                     ],
-                    resources=["*"]
+                    resources=[
+                        f"arn:aws:iam::{config['prodAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['prodAccount']['awsAccountId']}-{config['prodAccount']['awsRegion']}"
+                    ]
                 )
             ]
         )

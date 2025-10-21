@@ -26,8 +26,8 @@ class InfrastructureValidator:
         # Expected resource names
         self.input_bucket = f"glue-input-{stage}-{account_id}"
         self.output_bucket = f"glue-output-{stage}-{account_id}"
-        self.assets_bucket = f"glue-assets-{stage}-{account_id}"
-        self.glue_database = f"glue_database_{stage}"
+        self.assets_bucket = f"glue-assets-v2-{stage}-{account_id}"
+        self.glue_database = f"glue_database_v2_{stage}"
         
     def validate_buckets(self):
         """Test that all S3 buckets exist and are accessible"""
