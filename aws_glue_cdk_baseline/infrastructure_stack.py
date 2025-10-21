@@ -7,6 +7,7 @@ from aws_cdk import (
     Stack,
     CfnOutput,
     RemovalPolicy,
+    Duration,
     aws_glue_alpha as glue,
     aws_iam as iam,
     aws_s3 as s3,
@@ -91,6 +92,7 @@ class InfrastructureStack(Stack):
         self.trigger_lambda = lambda_.Function(self, f"GlueTriggerLambda-{stage}",
             runtime=lambda_.Runtime.PYTHON_3_9,
             handler="index.handler",
+            timeout=Duration.seconds(30),  # Increase timeout for Glue job triggering
             code=lambda_.Code.from_inline(f"""
 import json
 import boto3
