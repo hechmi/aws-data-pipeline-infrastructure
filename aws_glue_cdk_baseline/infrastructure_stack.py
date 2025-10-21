@@ -56,7 +56,6 @@ class InfrastructureStack(Stack):
 
         # Role for Glue service operations with S3 access
         self.glue_service_role = iam.Role(self, "GlueServiceRole",
-            role_name=f"GlueJobRole-{stage}",
             assumed_by=iam.ServicePrincipal("glue.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSGlueServiceRole")
@@ -127,7 +126,6 @@ def handler(event, context):
 
         # For integration test
         self.iam_role = iam.Role(self, "GlueTestRole",
-            role_name=f"glue-test-{stage}",
             assumed_by=iam.ArnPrincipal(f"arn:aws:iam::{str(config['pipelineAccount']['awsAccountId'])}:root"),
             inline_policies={
                 "GluePolicy": iam.PolicyDocument(
@@ -180,7 +178,6 @@ def handler(event, context):
         )
     def create_cross_account_role(self, role_name: str, trusted_account_id: str):
         return iam.Role(self, f"{role_name}CrossAccountRole",
-            role_name=role_name,
             assumed_by=iam.AccountPrincipal(trusted_account_id),
             managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name("AdministratorAccess")]
         )
