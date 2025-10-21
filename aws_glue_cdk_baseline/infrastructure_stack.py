@@ -88,7 +88,7 @@ class InfrastructureStack(Stack):
             }
         )
 
-        # Create Lambda function to trigger Glue job
+        # Create Lambda function to trigger Glue job for CSV files
         self.trigger_lambda = lambda_.Function(self, f"GlueTriggerLambda-{stage}",
             runtime=lambda_.Runtime.PYTHON_3_9,
             handler="index.handler",
@@ -109,7 +109,12 @@ def handler(event, context):
         
         print(f"File uploaded: s3://{{bucket}}/{{key}}")
         
-        # Start Glue job to process the uploaded file
+        # Only process CSV files
+        if not key.lower().endswith('.csv'):
+            print(f"Skipping non-CSV file: {{key}}")
+            continue
+        
+        # Start Glue job to process the CSV file
         try:
             response = glue.start_job_run(
                 JobName=f'FileProcessor-{stage}',
@@ -119,11 +124,11 @@ def handler(event, context):
                     '--database_name': f'glue_database_v2_{stage}'
                 }}
             )
-            print(f"Started Glue job: {{response['JobRunId']}} for file: {{key}}")
+            print(f"Started CSV to Iceberg job: {{response['JobRunId']}} for file: {{key}}")
         except Exception as e:
             print(f"Failed to start Glue job for {{key}}: {{e}}")
     
-    return {{'statusCode': 200, 'body': 'File processing triggered'}}
+    return {{'statusCode': 200, 'body': 'CSV processing triggered'}}
             """),
             environment={
                 'STAGE': stage,
