@@ -99,16 +99,27 @@ import urllib.parse
 def handler(event, context):
     print(f"Received event: {{json.dumps(event)}}")
     
+    glue = boto3.client('glue')
+    
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
         key = urllib.parse.unquote_plus(record['s3']['object']['key'])
         
         print(f"File uploaded: s3://{{bucket}}/{{key}}")
-        print(f"Stage: {stage}")
-        print(f"Output bucket: glue-output-{stage}-{config[f'{stage}Account']['awsAccountId']}")
         
-        # TODO: Will trigger Glue job in Phase 3
-        print("Infrastructure validation: Lambda triggered successfully!")
+        # Start Glue job to process the uploaded file
+        try:
+            response = glue.start_job_run(
+                JobName=f'FileProcessor-{stage}',
+                Arguments={{
+                    '--input_path': f's3://{{bucket}}/{{key}}',
+                    '--output_path': f's3://glue-output-{stage}-{config[f'{stage}Account']['awsAccountId']}/',
+                    '--database_name': f'glue_database_v2_{stage}'
+                }}
+            )
+            print(f"Started Glue job: {{response['JobRunId']}} for file: {{key}}")
+        except Exception as e:
+            print(f"Failed to start Glue job for {{key}}: {{e}}")
     
     return {{'statusCode': 200, 'body': 'File processing triggered'}}
             """),
@@ -116,6 +127,20 @@ def handler(event, context):
                 'STAGE': stage,
                 'OUTPUT_BUCKET': f"glue-output-{stage}-{config[f'{stage}Account']['awsAccountId']}"
             }
+        )
+
+        # Add Glue permissions to Lambda role
+        self.trigger_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "glue:StartJobRun",
+                    "glue:GetJobRun",
+                    "glue:GetJob"
+                ],
+                resources=[
+                    f"arn:aws:glue:{self.region}:{self.account}:job/FileProcessor-{stage}"
+                ]
+            )
         )
 
         # INPUT bucket triggers Lambda on any file upload
