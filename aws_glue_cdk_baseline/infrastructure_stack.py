@@ -51,7 +51,7 @@ class InfrastructureStack(Stack):
 
         # Create Glue database
         self.glue_database = glue.Database(self, f"GlueDatabase-{stage}",
-            database_name=f"glue_database_{stage}"
+            database_name=f"glue_database_v2_{stage}"
         )
 
         # Role for Glue service operations with S3 access
