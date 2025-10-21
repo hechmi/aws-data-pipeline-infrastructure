@@ -23,7 +23,8 @@ class PipelineStack(Stack):
         source = CodePipelineSource.connection(
             GITHUB_REPO,
             GITHUB_BRANCH,
-            connection_arn=GITHUB_CONNECTION_ARN
+            connection_arn=GITHUB_CONNECTION_ARN,
+            trigger_on_push=True  # Enable automatic triggering on commits
         )
  
         pipeline = CodePipeline(self, "GluePipeline",
