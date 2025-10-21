@@ -61,16 +61,17 @@ class PipelineStack(Stack):
         # Add validation step after dev deployment
         dev_validation = CodeBuildStep("ValidateDevInfra",
             install_commands=[
-                "pip install boto3",
-                "pip install awscli"
+                "pip install boto3"
             ],
             commands=[
                 "echo 'Validating Dev Infrastructure...'",
                 "chmod +x scripts/validate_infrastructure.py",
-                # Configure AWS CLI to assume cross-account role
-                f"aws configure set role_arn arn:aws:iam::{config['devAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['devAccount']['awsAccountId']}-{config['devAccount']['awsRegion']}",
-                "aws configure set credential_source EcsContainer",
-                f"AWS_PROFILE=default python3 scripts/validate_infrastructure.py dev {config['devAccount']['awsRegion']} {config['devAccount']['awsAccountId']}"
+                # Use cross-account role to access dev account
+                f"aws sts assume-role --role-arn arn:aws:iam::{config['devAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['devAccount']['awsAccountId']}-{config['devAccount']['awsRegion']} --role-session-name ValidationSession > /tmp/creds.json",
+                "export AWS_ACCESS_KEY_ID=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['AccessKeyId'])\")",
+                "export AWS_SECRET_ACCESS_KEY=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SecretAccessKey'])\")",
+                "export AWS_SESSION_TOKEN=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SessionToken'])\")",
+                f"python3 scripts/validate_infrastructure.py dev {config['devAccount']['awsRegion']} {config['devAccount']['awsAccountId']}"
             ],
             build_environment=codebuild.BuildEnvironment(
                 build_image=codebuild.LinuxBuildImage.STANDARD_7_0
@@ -104,10 +105,11 @@ class PipelineStack(Stack):
             commands=[
                 "echo 'Validating Prod Infrastructure...'",
                 "chmod +x scripts/validate_infrastructure.py",
-                # Assume cross-account role for validation
-                f"export AWS_ROLE_ARN=arn:aws:iam::{config['prodAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['prodAccount']['awsAccountId']}-{config['prodAccount']['awsRegion']}",
-                "export AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE",
-                "export AWS_ROLE_SESSION_NAME=ValidationSession",
+                # Use cross-account role to access prod account
+                f"aws sts assume-role --role-arn arn:aws:iam::{config['prodAccount']['awsAccountId']}:role/cdk-hnb659fds-cfn-exec-role-{config['prodAccount']['awsAccountId']}-{config['prodAccount']['awsRegion']} --role-session-name ValidationSession > /tmp/creds.json",
+                "export AWS_ACCESS_KEY_ID=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['AccessKeyId'])\")",
+                "export AWS_SECRET_ACCESS_KEY=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SecretAccessKey'])\")",
+                "export AWS_SESSION_TOKEN=$(cat /tmp/creds.json | python3 -c \"import sys, json; print(json.load(sys.stdin)['Credentials']['SessionToken'])\")",
                 f"python3 scripts/validate_infrastructure.py prod {config['prodAccount']['awsRegion']} {config['prodAccount']['awsAccountId']}"
             ],
             build_environment=codebuild.BuildEnvironment(
