@@ -88,7 +88,7 @@ class InfrastructureStack(Stack):
             }
         )
 
-        # Create Lambda function to trigger Glue job for CSV files
+        # Create Lambda function to trigger Glue job for CSV files - E2E Test v1.0
         self.trigger_lambda = lambda_.Function(self, f"GlueTriggerLambda-{stage}",
             runtime=lambda_.Runtime.PYTHON_3_9,
             handler="index.handler",
