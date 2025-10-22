@@ -24,7 +24,8 @@ class PipelineStack(Stack):
             GITHUB_REPO,
             GITHUB_BRANCH,
             connection_arn=GITHUB_CONNECTION_ARN,
-            trigger_on_push=True  # Enable automatic triggering on commits
+            trigger_on_push=True,  # Enable automatic triggering on commits
+            code_build_clone_output=True  # Force webhook recreation
         )
  
         pipeline = CodePipeline(self, "GluePipeline",
