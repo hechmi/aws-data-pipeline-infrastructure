@@ -88,7 +88,7 @@ class InfrastructureStack(Stack):
             }
         )
 
-        # Create Lambda function to trigger Glue job for CSV files - E2E Test v1.0
+        # Create Lambda function to trigger Glue job for CSV files - Infrastructure Demo v2.0
         self.trigger_lambda = lambda_.Function(self, f"GlueTriggerLambda-{stage}",
             runtime=lambda_.Runtime.PYTHON_3_9,
             handler="index.handler",
@@ -132,7 +132,9 @@ def handler(event, context):
             """),
             environment={
                 'STAGE': stage,
-                'OUTPUT_BUCKET': f"glue-output-{stage}-{config[f'{stage}Account']['awsAccountId']}"
+                'OUTPUT_BUCKET': f"glue-output-{stage}-{config[f'{stage}Account']['awsAccountId']}",
+                'DEMO_VERSION': 'Infrastructure-Demo-v2.0',
+                'DEMO_TIMESTAMP': '2024-10-22'
             }
         )
 
