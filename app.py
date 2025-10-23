@@ -2,6 +2,8 @@
 
 # Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
+
+# Demo comment added for pipeline demonstration - 2025-10-23
 import os
 import yaml
 
