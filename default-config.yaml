@@ -1,14 +1,15 @@
+# TODO: Replace these placeholder values with your actual AWS account IDs and region
 pipelineAccount:
-  awsAccountId: 009507777973
-  awsRegion: us-west-2
+  awsAccountId: YOUR_PIPELINE_ACCOUNT_ID
+  awsRegion: YOUR_PREFERRED_REGION
 
 devAccount:
-  awsAccountId: 095929019002
-  awsRegion: us-west-2
+  awsAccountId: YOUR_DEV_ACCOUNT_ID
+  awsRegion: YOUR_PREFERRED_REGION
 
 prodAccount:
-  awsAccountId: 981445861826
-  awsRegion: us-west-2
+  awsAccountId: YOUR_PROD_ACCOUNT_ID
+  awsRegion: YOUR_PREFERRED_REGION
 
 dev:
   jobs:

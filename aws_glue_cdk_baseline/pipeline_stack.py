@@ -9,9 +9,10 @@ from constructs import Construct
 from aws_cdk.pipelines import CodePipeline, CodePipelineSource, CodeBuildStep, ManualApprovalStep
 from aws_glue_cdk_baseline.deployment_stage import DeploymentStage
  
-GITHUB_REPO = "hechmi/aws-data-pipeline-infrastructure"
+# TODO: Replace these placeholders with your actual values
+GITHUB_REPO = "YOUR_GITHUB_USERNAME/YOUR_INFRASTRUCTURE_REPO_NAME"
 GITHUB_BRANCH = "main"
-GITHUB_CONNECTION_ARN = "arn:aws:codeconnections:us-west-2:009507777973:connection/e2814821-01cb-4c90-8ba5-3df3093c31c0"
+GITHUB_CONNECTION_ARN = "arn:aws:codeconnections:YOUR_REGION:YOUR_PIPELINE_ACCOUNT:connection/YOUR_CONNECTION_ID"
 
 # Test automatic triggering
  
@@ -24,8 +25,7 @@ class PipelineStack(Stack):
             GITHUB_REPO,
             GITHUB_BRANCH,
             connection_arn=GITHUB_CONNECTION_ARN,
-            trigger_on_push=True,  # Enable automatic triggering on commits
-            code_build_clone_output=True  # Force webhook recreation
+            trigger_on_push=True  # Enable automatic triggering on commits
         )
  
         pipeline = CodePipeline(self, "GluePipeline",
